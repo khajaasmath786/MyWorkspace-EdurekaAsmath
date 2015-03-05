@@ -1,3 +1,0 @@
-Combiner is optimization for Reducer
-Output of each mapper is run locally to perform aggregation and reduce network trafic.
-reduces burden on Reducer
