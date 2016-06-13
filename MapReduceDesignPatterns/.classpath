@@ -28,6 +28,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/cygwin64/bin"/>
-	<classpathentry kind="lib" path="C:/hadoop-2.6.0"/>
+	<classpathentry kind="lib" path="C:/hadoop-2.7.2"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

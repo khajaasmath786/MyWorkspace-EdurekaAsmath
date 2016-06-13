@@ -1,4 +1,4 @@
-package com.mcd.gdw.daas.swathi;
+package com.swathi;
 import java.io.*;
 
 import org.apache.hadoop.fs.*;

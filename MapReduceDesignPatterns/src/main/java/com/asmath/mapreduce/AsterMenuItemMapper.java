@@ -1,4 +1,4 @@
-package com.mcd.gdw.daas.mapreduce;
+package com.asmath.mapreduce;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;

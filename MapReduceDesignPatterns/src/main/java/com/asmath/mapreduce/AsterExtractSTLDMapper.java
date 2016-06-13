@@ -1,28 +1,20 @@
-package com.mcd.gdw.daas.mapreduce;
+package com.asmath.mapreduce;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
-import java.net.URI;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.filecache.DistributedCache;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 //import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 //import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.w3c.dom.Document;
@@ -32,18 +24,19 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-public class AsterExtractSTLDMenuItemMapper extends Mapper<LongWritable, Text, NullWritable, Text> {
+public class AsterExtractSTLDMapper extends Mapper<LongWritable, Text, Text, Text> {
 	
 	private static final BigDecimal DECIMAL_ZERO = new BigDecimal("0.00");
 	
 	private static String[] parts = null;
 	private Text mapKey = new Text();
 	private Text mapValue = new Text();
+	
 
 	private DocumentBuilderFactory docFactory = null;
 	private DocumentBuilder docBuilder = null;
 	private InputSource xmlSource = null;
-	private Document docStld = null;
+	private Document doc = null;
 
 	private Element eleRoot;
 	private NodeList nlNode;
@@ -68,27 +61,6 @@ public class AsterExtractSTLDMenuItemMapper extends Mapper<LongWritable, Text, N
 	private String orderTimestamp="";
 	private String orderKey="";
 	private String orderTotalAmount="";
-	
-	//
-	String storeId = "";
-	String productId = "";
-	String takePrice = "";
-	String eatInPrice = "";
-	String longName = "";
-	
-	DocumentBuilder builder;
-	DocumentBuilderFactory factory;
-	Document doc;
-	
-	NodeList MenuNodeList;
-	Element MenuNodeElm;
-	Element ProductNodeElm;
-	NodeList ProductNodeList;
-	
-	//private NullWritable mapKeyPmenu = new NullWritable();
-		private Text mapValuePmenu = new Text();
-		private Text mapKeyPmenu = new Text();
-	
 	
 
 	private SimpleDateFormat timeformat = new SimpleDateFormat(
@@ -118,58 +90,20 @@ public class AsterExtractSTLDMenuItemMapper extends Mapper<LongWritable, Text, N
 	private String menuItem = "";
 	private String itemCode = "";
 	private String itemType="";
-	private String delimiter=",";
-	private String pipeDelimiter="|";
 	private String commaDelimiter=",";
-	 HashMap<String,String> itemCodeMenuItemMap = new HashMap<String,String>();
+	private String pipeDelimiter="|";
 
 	@Override
 	public void setup(Context context) {
 
         fileSplit = (FileSplit) context.getInputSplit();
         fileName = fileSplit.getPath().getName();
-        BufferedReader br = null;
 
 			try {
 			docFactory = DocumentBuilderFactory.newInstance();
 			docBuilder = docFactory.newDocumentBuilder();
-			factory = DocumentBuilderFactory
-					.newInstance();
-			builder = factory.newDocumentBuilder();
-		
-			Configuration conf = context.getConfiguration();
-			URI[] cacheFiles = DistributedCache.getCacheFiles(conf);
-			String line = "";
 			
-			for (int i = 0; i < cacheFiles.length; i++) {
-				
-
-				br = new BufferedReader(new FileReader(new Path(
-						cacheFiles[i].getPath()).toString()));
-				System.out.println(new Path(
-						cacheFiles[i].getPath()).toString());
-				while ((line = br.readLine()) != null) {
-	    		    	  	
- 	  			
-		    	  			
-		    	  				if (line != null && !line.isEmpty()) {	
-		    	  					System.out.println("line"+line);
-		    	  					//getting Menu Item values							
-		    	  					getProductMenuItems(line);
-		    	  					
-		    	  				
-		    	  					
-		    	  				}
-		    	  				
-		    	  				
-		    	  			
-	    		      
-	    		      
-	    		      
-	    	      }
-
-			
-		} }catch (Exception ex) {
+		} catch (Exception ex) {
 			System.err.println("Error in initializing AsterExtractMapper:");
 			System.err.println(ex.toString());
 			System.exit(8);
@@ -216,82 +150,6 @@ public class AsterExtractSTLDMenuItemMapper extends Mapper<LongWritable, Text, N
 		return date;
 	}
 	
-	public void getProductMenuItems(String value)
-			throws Exception {
-
-		String menuXML = value.toString().substring(
-				value.toString().indexOf("<"));
-		
-
-		factory = DocumentBuilderFactory
-				.newInstance();
-		
-		try {
-			builder = factory.newDocumentBuilder();
-
-			
-
-			doc = builder.parse(new InputSource(new StringReader(menuXML)));
-
-			doc.getDocumentElement().normalize();
-
-			MenuNodeList = doc.getElementsByTagName("MenuItem");
-			for (int i = 0; i < MenuNodeList.getLength(); i++) {
-				MenuNodeElm = (Element) MenuNodeList.item(i);
-
-				storeId = MenuNodeElm.getAttribute("storeId");
-				
-				ProductNodeList = MenuNodeElm ==null?null: MenuNodeElm.getElementsByTagName("ProductInfo");
-				
-				
-				for (int product = 0; product < ProductNodeList.getLength(); product++) {
-					ProductNodeElm = (Element) ProductNodeList.item(product);
-					
-				
-					productId = ProductNodeElm.getAttribute("id");
-					takePrice = ProductNodeElm.getAttribute("takeoutPrice");
-					eatInPrice = ProductNodeElm.getAttribute("eatinPrice");
-					longName = ProductNodeElm.getAttribute("longName");
-					
-					String hashMapkey=new StringBuffer(storeId)
-					.append(pipeDelimiter).append(productId).toString();
-  					String hashMapvalue=new StringBuffer(storeId)
-					.append(commaDelimiter).append(productId).append(commaDelimiter)
-					.append(takePrice).append(commaDelimiter)
-					.append(eatInPrice).append(commaDelimiter)
-					.append(longName).toString();
-  					System.out.println("hashkey"+hashMapkey);
-  					System.out.println("hashmapvalue"+hashMapvalue);
-  					
-  					itemCodeMenuItemMap.put(hashMapkey,hashMapvalue );
-  					
-					/*System.out.println(productId);
-					System.out.println(takePrice);
-					System.out.println(eatInPrice);
-					System.out.println(longName);
-					*/
-
-					/*mapKeyPmenu.clear();
-					mapKeyPmenu.set((new StringBuffer(storeId)
-					.append(pipeDelimiter).append(productId).toString()));
-					mapValuePmenu.clear();
-					mapValuePmenu.set((new StringBuffer(storeId)
-							.append(commaDelimiter).append(productId).append(commaDelimiter)
-							.append(takePrice).append(commaDelimiter)
-							.append(eatInPrice).append(commaDelimiter)
-							.append(longName)).toString());
-					context.write(mapKeyPmenu,mapValuePmenu);*/
-
-				}
-
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			System.err.println("Error in AsterMenuItemMapper:");
-			e.printStackTrace(System.err);
-			System.exit(8);
-		}
-	}
 	private void getSalesSummary(String xmlText
 			                    ,Context context) {
 
@@ -301,9 +159,9 @@ public class AsterExtractSTLDMenuItemMapper extends Mapper<LongWritable, Text, N
 		try {
 			strReader  = new StringReader(xmlText);
 			xmlSource = new InputSource(strReader);
-			docStld = docBuilder.parse(xmlSource);
+			doc = docBuilder.parse(xmlSource);
 
-			eleRoot = (Element) docStld.getFirstChild();
+			eleRoot = (Element) doc.getFirstChild();
 
 			if ( eleRoot.getNodeName().equals("TLD") ) {
 				//lgcyLclRfrDefCd = eleRoot.getAttribute("gdwLgcyLclRfrDefCd");
@@ -393,7 +251,9 @@ public class AsterExtractSTLDMenuItemMapper extends Mapper<LongWritable, Text, N
 														orderKind = eleOrder
 																.getAttribute("kind");
 														
-														
+														System.out
+																.println(eleOrder
+																.getAttribute("Timestamp")+"");
 														/*orderTimestamp = timeformat.parse(eleOrder
 																.getAttribute("Timestamp"))+"";*/
 														orderTimestamp = eleOrder
@@ -465,7 +325,8 @@ public class AsterExtractSTLDMenuItemMapper extends Mapper<LongWritable, Text, N
 																					
 																					itemCode = nodeItem
 																							.getNodeValue();
-																					
+																					System.out
+																							.println("Itemcode"+itemCode);
 
 																				}
 																				if (NodeNameItem
@@ -501,22 +362,16 @@ public class AsterExtractSTLDMenuItemMapper extends Mapper<LongWritable, Text, N
 																					// Added for Vicki Requirement
 																					/*if(!itemType.equalsIgnoreCase("NON_FOOD_PRODUCT") && itemQty!=0)
 																					{*/
-																					
-																					System.out
-																					.println(orderKey + pipeDelimiter+itemCode);
-																					
-																					
-																					String productName="";
-																					if(itemCodeMenuItemMap.containsKey(storeID + pipeDelimiter+itemCode))
-																					{
-																						productName=itemCodeMenuItemMap.get(storeID + pipeDelimiter+itemCode).split(",")[4];
-																					}
+
+																					mapKey.clear();
+																					mapKey.set((new StringBuffer(storeID)
+																					.append(pipeDelimiter).append(itemCode).toString()));
 																					mapValue.clear();
-																					mapValue.set(tldBusinessDate + delimiter + businessDate+delimiter +storeID + delimiter+
-																							orderKey + delimiter + orderSaleType + delimiter + orderLocation+ delimiter +  orderKind + delimiter + orderTimestamp + delimiter + orderTotalAmount+delimiter+
-																							itemCode+ delimiter+itemType+ delimiter+itemQty+ delimiter+itemLevel+ delimiter+itemTotalPrice+delimiter+productName);
+																					mapValue.set(tldBusinessDate + commaDelimiter + businessDate+commaDelimiter +storeID + commaDelimiter+
+																							orderKey + commaDelimiter + orderSaleType + commaDelimiter + orderLocation+ commaDelimiter +  orderKind + commaDelimiter + orderTimestamp + commaDelimiter + orderTotalAmount+commaDelimiter+
+																							itemCode+ commaDelimiter+itemType+ commaDelimiter+itemQty+ commaDelimiter+itemLevel+ commaDelimiter+itemTotalPrice);
 																					//Output Fields in excel:  Business Date, StoreId, OrderKey, OderSaleType, OrderLocation, OrderTimeStamp, OrderTotalAmount, ItemCode, ItemType, ItemQuantity, ItemLevel, ItemTotalPrice.
-																					context.write(NullWritable.get(), mapValue);
+																					context.write(mapKey, mapValue);
 																						
 																					//}
 																				}
@@ -554,7 +409,7 @@ public class AsterExtractSTLDMenuItemMapper extends Mapper<LongWritable, Text, N
 			System.exit(8);
 		}finally{
 			
-				docStld = null;
+				doc = null;
 				xmlSource = null;
 				
 				if(strReader != null){

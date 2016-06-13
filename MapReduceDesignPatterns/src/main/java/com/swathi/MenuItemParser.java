@@ -1,4 +1,4 @@
-package com.mcd.gdw.daas.driver;
+package com.swathi;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -142,7 +142,7 @@ public class MenuItemParser extends Configured implements Tool {
 			return 2;
 		}
 		Configuration conf = this.getConf();
-		Job job = new Job(conf,"AsterMenuItemExtract");
+		Job job = new Job(conf,"Menu Item Parser");
 		job.setJarByClass(MenuItemParser.class);
 		job.setMapOutputValueClass(Text.class);
 		job.setMapOutputKeyClass(NullWritable.class);

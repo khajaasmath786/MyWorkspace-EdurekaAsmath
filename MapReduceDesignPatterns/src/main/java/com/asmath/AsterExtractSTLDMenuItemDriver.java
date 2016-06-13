@@ -1,5 +1,5 @@
 
-package com.mcd.gdw.daas.driver;
+package com.asmath;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -18,7 +18,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import  com.mcd.gdw.daas.mapreduce.*;
+import com.asmath.mapreduce.*;
 import com.mcd.gdw.daas.util.HDFSUtil;
 
 public class AsterExtractSTLDMenuItemDriver extends Configured implements Tool {
